@@ -12,15 +12,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+
 @Slf4j
 @RestController
-@RequestMapping("/author")
+@RequestMapping()
 @RequiredArgsConstructor
 public class AuthorController {
 
     private final AuthorService authorService;
 
-    @GetMapping("/list_search")
+    @GetMapping("/public/author/list_search")
     public BaseResponse<PageResponse<AuthorResponse>> listSearch(
             @RequestParam(required = false) String name,
             Pageable pageable
@@ -28,25 +30,32 @@ public class AuthorController {
         return BaseResponse.of(authorService.listSearch(name, pageable));
     }
 
-    @GetMapping("/info/{authorId}")
-    public BaseResponse<AuthorResponse> getEmployeeInfo(
+    @GetMapping("/author/info/{authorId}")
+    public BaseResponse<AuthorResponse> getAuthorInfo(
             @PathVariable("authorId") Integer authorId)
     {
         return BaseResponse.of(authorService.getAuthor(authorId));
     }
 
-    @PostMapping("/create")
+    @PostMapping("/author/create")
     public BaseResponse<AuthorResponse> createAuthor(
             @RequestBody @Valid AuthorRequest request
     ) {
         return BaseResponse.of(authorService.createAuthor(request));
     }
 
-    @PutMapping("/update")
+    @PutMapping("/author/update")
     public BaseResponse<AuthorResponse> updateAuthor(
             @RequestBody @Valid AuthorRequest request
     ) {
         return BaseResponse.of(authorService.updateAuthor(request));
+    }
+
+    @GetMapping("/author/delete/{authorId}")
+    public BaseResponse<Object> deleteAuthor(
+            @PathVariable("authorId") Integer authorId) {
+        authorService.deleteAuthor(authorId);
+        return BaseResponse.of(Collections.emptyMap());
     }
 
 }

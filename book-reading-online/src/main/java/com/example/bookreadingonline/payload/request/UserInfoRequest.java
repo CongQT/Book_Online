@@ -1,5 +1,6 @@
-package com.example.bookreadingonline.payload.response;
+package com.example.bookreadingonline.payload.request;
 
+import com.example.bookreadingonline.payload.response.RoleResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -14,16 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserInfoResponse {
-
-  @JsonProperty("id")
-  private Integer id;
-
-  @JsonProperty("username")
-  private String username;
-
-  @JsonProperty("role")
-  private RoleResponse role;
+public class UserInfoRequest {
 
   @JsonProperty("name")
   private String name;
@@ -40,7 +32,7 @@ public class UserInfoResponse {
   @JsonProperty("phone")
   private String phone;
 
-  @JsonProperty("avatar_url")
-  private String avatar_url;
+  @JsonProperty("avatar")
+  private String avatar;
 
 }

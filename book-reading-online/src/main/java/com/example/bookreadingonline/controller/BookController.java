@@ -15,13 +15,13 @@ import java.util.Collections;
 
 @Slf4j
 @RestController
-@RequestMapping("/book")
+@RequestMapping("")
 @RequiredArgsConstructor
 public class BookController {
 
     private final BookService bookService;
 
-    @GetMapping("/list_search")
+    @GetMapping("/public/book/list_search")
     public BaseResponse<PageResponse<BookResponse>> listSearch(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String status,
@@ -32,27 +32,27 @@ public class BookController {
         return BaseResponse.of(bookService.listSearch(title, status, authorId, categoryId, pageable));
     }
 
-    @GetMapping("/info/{bookId}")
+    @GetMapping("/public/book/info/{bookId}")
     public BaseResponse<BookResponse> getEmployeeInfo(
             @PathVariable("bookId") Integer bookId) {
         return BaseResponse.of(bookService.getBook(bookId));
     }
 
-    @PostMapping("/create")
+    @PostMapping("/book/create")
     public BaseResponse<BookResponse> createBook(
             @RequestBody @Valid BookRequest request
     ) {
         return BaseResponse.of(bookService.createBook(request));
     }
 
-    @PutMapping("/update")
+    @PutMapping("/book/update")
     public BaseResponse<BookResponse> updateBook(
             @RequestBody @Valid BookRequest request
     ) {
         return BaseResponse.of(bookService.updateBook(request));
     }
 
-    @GetMapping("/delete/{bookId}")
+    @GetMapping("/book/delete/{bookId}")
     public BaseResponse<Object> deleteBook(
             @PathVariable("bookId") Integer bookId) {
         bookService.deleteBook(bookId);

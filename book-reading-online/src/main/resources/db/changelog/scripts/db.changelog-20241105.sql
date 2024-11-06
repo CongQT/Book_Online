@@ -114,3 +114,11 @@ ALTER TABLE book
 ALTER TABLE book_aud
     ADD COLUMN author_id INT AFTER status;
 
+-- changeset congqt:20241105.133402.05
+
+ALTER TABLE user
+DROP INDEX username;
+
+ALTER TABLE user_aud
+DROP INDEX username;
+

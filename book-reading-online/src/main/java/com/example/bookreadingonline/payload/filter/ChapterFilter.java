@@ -1,7 +1,6 @@
-package com.example.bookreadingonline.payload.response;
+package com.example.bookreadingonline.payload.filter;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,12 +11,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RoleResponse {
+public class ChapterFilter {
 
-  @JsonProperty("id")
-  private Integer id;
-
-  @JsonProperty("name")
-  private String name;
-
+    private Integer bookId;
 }

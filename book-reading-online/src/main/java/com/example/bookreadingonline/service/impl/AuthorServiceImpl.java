@@ -2,6 +2,7 @@ package com.example.bookreadingonline.service.impl;
 
 import com.example.bookreadingonline.constant.ErrorCode;
 import com.example.bookreadingonline.entity.Author;
+import com.example.bookreadingonline.entity.Book;
 import com.example.bookreadingonline.exception.NotFoundException;
 import com.example.bookreadingonline.payload.filter.AuthorFilter;
 import com.example.bookreadingonline.payload.filter.BaseEntityFilter;
@@ -61,6 +62,15 @@ public class AuthorServiceImpl implements AuthorService {
                         .errorCode(ErrorCode.ENTITY_NOT_FOUND)
                         .extraData("id", id));
         return modelMapper.map(author, AuthorResponse.class);
+    }
+
+    @Override
+    public void deleteAuthor(Integer id) {
+        Author author = authorRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Not found Author with id: " + id)
+                        .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                        .extraData("id", id));
+        authorRepo.delete(author);
     }
 
     @Override

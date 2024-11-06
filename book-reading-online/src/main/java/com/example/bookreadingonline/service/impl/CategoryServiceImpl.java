@@ -1,6 +1,7 @@
 package com.example.bookreadingonline.service.impl;
 
 import com.example.bookreadingonline.constant.ErrorCode;
+import com.example.bookreadingonline.entity.Author;
 import com.example.bookreadingonline.entity.Category;
 import com.example.bookreadingonline.exception.NotFoundException;
 import com.example.bookreadingonline.payload.filter.CategoryFilter;
@@ -61,6 +62,15 @@ public class CategoryServiceImpl implements CategoryService {
                         .errorCode(ErrorCode.ENTITY_NOT_FOUND)
                         .extraData("id", id));
         return modelMapper.map(category, CategoryResponse.class);
+    }
+
+    @Override
+    public void deleteCategory(Integer id) {
+        Category category = categoryRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Not found Category with id: " + id)
+                        .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                        .extraData("id", id));
+        categoryRepo.delete(category);
     }
 
     @Override

@@ -16,6 +16,8 @@ public interface AuthorService extends BaseEntityService<Author, Integer> {
 
     AuthorResponse getAuthor(Integer id);
 
+    void deleteAuthor(Integer id);
+
     PageResponse<AuthorResponse> listSearch(String name, Pageable pageable);
 
 }

@@ -14,6 +14,8 @@ public interface CategoryService extends BaseEntityService<Category, Integer> {
 
     CategoryResponse getCategory(Integer id);
 
+    void deleteCategory(Integer id);
+
     PageResponse<CategoryResponse> listSearch(String name, Pageable pageable);
 
 }

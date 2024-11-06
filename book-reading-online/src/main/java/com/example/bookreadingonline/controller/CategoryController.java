@@ -11,15 +11,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+
 @Slf4j
 @RestController
-@RequestMapping("/category")
+@RequestMapping()
 @RequiredArgsConstructor
 public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @GetMapping("/list_search")
+    @GetMapping("/public/category/list_search")
     public BaseResponse<PageResponse<CategoryResponse>> listSearch(
             @RequestParam(required = false) String name,
             Pageable pageable
@@ -27,25 +29,32 @@ public class CategoryController {
         return BaseResponse.of(categoryService.listSearch(name, pageable));
     }
 
-    @GetMapping("/info/{categoryId}")
-    public BaseResponse<CategoryResponse> getEmployeeInfo(
+    @GetMapping("/public/category/info/{categoryId}")
+    public BaseResponse<CategoryResponse> getCategoryInfo(
             @PathVariable("categoryId") Integer categoryId)
     {
         return BaseResponse.of(categoryService.getCategory(categoryId));
     }
 
-    @PostMapping("/create")
+    @PostMapping("/category/create")
     public BaseResponse<CategoryResponse> createCategory(
             @RequestBody @Valid CategoryRequest request
     ) {
         return BaseResponse.of(categoryService.createCategory(request));
     }
 
-    @PutMapping("/update")
+    @PutMapping("/category/update")
     public BaseResponse<CategoryResponse> updateCategory(
             @RequestBody @Valid CategoryRequest request
     ) {
         return BaseResponse.of(categoryService.updateCategory(request));
+    }
+
+    @GetMapping("/category/delete/{categoryId}")
+    public BaseResponse<Object> deleteCategory(
+            @PathVariable("categoryId") Integer categoryId) {
+        categoryService.deleteCategory(categoryId);
+        return BaseResponse.of(Collections.emptyMap());
     }
 
 }
