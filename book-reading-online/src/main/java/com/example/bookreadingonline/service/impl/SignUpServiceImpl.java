@@ -35,7 +35,7 @@ public class SignUpServiceImpl implements SignupService {
                             .extraData("username", request.getUsername());
                 });
 
-        Role role = roleService.findById(request.getRoleId());
+        Role role = roleService.findById(2);
         if (!role.isAllowedSignUp()) {
             throw new BadRequestException("Can not signup with role: " + role.getName())
                     .errorCode(ErrorCode.INVALID_INPUT_DATA)
@@ -46,8 +46,8 @@ public class SignUpServiceImpl implements SignupService {
                 .username(request.getUsername())
                 .role(role)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
                 .email(request.getEmail())
+                .name(request.getUsername())
                 .build();
         userRepo.save(user);
     }

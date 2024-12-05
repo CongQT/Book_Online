@@ -11,11 +11,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BookFilter {
+public class FeedbackFilter {
 
-    private Integer id;
-    private String titleLk;
-    private String statusLk;
-    private Integer authorId;
-    private CategoryBookFilter categoryBooks;
+    private Integer bookId;
 }

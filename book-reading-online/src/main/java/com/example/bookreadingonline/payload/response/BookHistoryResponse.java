@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BookResponse {
+public class BookHistoryResponse {
 
   @JsonProperty("id")
   private Integer id;
@@ -23,23 +23,20 @@ public class BookResponse {
   @JsonProperty("title")
   private String title;
 
+  @JsonProperty("chapter_id")
+  private Integer chapterId;
+
+  @JsonProperty("chapter_history")
+  private ChapterHistoryResponse chapter;
+
   @JsonProperty("summary")
   private String summary;
 
   @JsonProperty("avg_rating")
   private Double avgRating;
 
-  @JsonProperty("thumbnail_key")
-  private String thumbnail;
-
-  @JsonProperty("banner_key")
-  private String banner;
-
   @JsonProperty("thumbnail_url")
   private String thumbnailUrl;
-
-  @JsonProperty("banner_url")
-  private String bannerUrl;
 
   @JsonProperty("view")
   private Integer view;
@@ -58,9 +55,5 @@ public class BookResponse {
 
   @JsonProperty("category_book")
   private List<CategoryBookResponse> categoryBooks;
-
-  @JsonProperty("new_chapter")
-  private NewChapterResponse newChapter;
-
 
 }

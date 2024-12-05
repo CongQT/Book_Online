@@ -50,7 +50,7 @@ public class CategoryController {
         return BaseResponse.of(categoryService.updateCategory(request));
     }
 
-    @GetMapping("/category/delete/{categoryId}")
+    @DeleteMapping("/category/delete/{categoryId}")
     public BaseResponse<Object> deleteCategory(
             @PathVariable("categoryId") Integer categoryId) {
         categoryService.deleteCategory(categoryId);

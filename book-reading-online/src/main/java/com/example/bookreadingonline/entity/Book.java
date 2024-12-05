@@ -13,8 +13,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Table(name = "book")
-@SQLDelete(sql = "UPDATE book SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-@Where(clause = "deleted_at is null")
 @Entity
 @Getter
 @Setter
@@ -22,7 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-public class Book extends BaseEntity{
+public class Book extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -44,8 +42,14 @@ public class Book extends BaseEntity{
     @Column(name = "thumbnail")
     private String thumbnail;
 
+    @Column(name = "banner")
+    private String banner;
+
     @Column(name = "view")
     private Integer view;
+
+    @Column(name = "feedback_count")
+    private Integer feedbackCount;
 
     @Column(name = "status")
     private String status;
@@ -54,5 +58,10 @@ public class Book extends BaseEntity{
     @NotAudited
     @JoinColumn(name = "book_id", referencedColumnName = "id")
     private List<CategoryBook> categoryBooks;
+
+    @OneToMany()
+    @NotAudited
+    @JoinColumn(name = "book_id", referencedColumnName = "id")
+    private List<Chapter> chapters;
 
 }

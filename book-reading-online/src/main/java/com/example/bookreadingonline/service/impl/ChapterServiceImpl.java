@@ -32,7 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -74,15 +77,34 @@ public class ChapterServiceImpl implements ChapterService {
     @Override
     @Transactional
     public ChapterResponse getChapter(Integer bookId, Integer order) {
-        Chapter chapter = chapterRepo.findByOrderChapAndBookId(order, bookId);
-        ChapterResponse chapterResponse = modelMapper.map(chapter, ChapterResponse.class);
-        String fileUrl = fileService.getFileUrl(chapter.getFileKey());
-        chapterResponse.setFileUrl(fileUrl);
         Book book = bookRepo.findById(bookId)
                 .orElseThrow(() -> new NotFoundException("Not found book with id: " + bookId)
                         .errorCode(ErrorCode.ENTITY_NOT_FOUND)
                         .extraData("id", bookId));
+        Chapter chapter = chapterRepo.findByOrderChapAndBookId(order, bookId);
+        ChapterResponse chapterResponse = modelMapper.map(chapter, ChapterResponse.class);
+        String fileUrl = fileService.getFileUrl(chapter.getFileKey());
+        chapterResponse.setFileUrl(fileUrl);
         chapterResponse.setBook(modelMapper.map(book, BookResponse.class));
+        List<Integer> chapterOrder = chapterRepo.findByBookId(bookId).stream() 
+                .map(Chapter::getOrderChap) 
+                .sorted(Comparator.reverseOrder()) 
+                .toList();
+        log.info("Chapter"+ chapterOrder);
+        if (chapterOrder.get(0).equals(order) && !chapterOrder.get(chapterOrder.size() - 1).equals(order)) {
+            chapterResponse.setOrderNext(null);
+            chapterResponse.setOrderPrevious(order - 1);
+        } else if (!chapterOrder.get(0).equals(order) && chapterOrder.get(chapterOrder.size() - 1).equals(order)) {
+            chapterResponse.setOrderPrevious(null);
+            chapterResponse.setOrderNext(order + 1);
+        } else if (chapterOrder.get(0).equals(order) && chapterOrder.get(chapterOrder.size() - 1).equals(order)) {
+            chapterResponse.setOrderPrevious(null);
+            chapterResponse.setOrderNext(null);
+        }
+        else {
+            chapterResponse.setOrderPrevious(order - 1);
+            chapterResponse.setOrderNext(order + 1);
+        }
         return chapterResponse;
     }
 

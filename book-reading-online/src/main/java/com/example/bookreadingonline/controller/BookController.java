@@ -1,6 +1,7 @@
 package com.example.bookreadingonline.controller;
 
 import com.example.bookreadingonline.payload.request.BookRequest;
+import com.example.bookreadingonline.payload.response.BookHistoryResponse;
 import com.example.bookreadingonline.payload.response.BookResponse;
 import com.example.bookreadingonline.payload.response.base.BaseResponse;
 import com.example.bookreadingonline.payload.response.base.PageResponse;
@@ -52,11 +53,32 @@ public class BookController {
         return BaseResponse.of(bookService.updateBook(request));
     }
 
-    @GetMapping("/book/delete/{bookId}")
+    @DeleteMapping("/book/delete/{bookId}")
     public BaseResponse<Object> deleteBook(
             @PathVariable("bookId") Integer bookId) {
         bookService.deleteBook(bookId);
         return BaseResponse.of(Collections.emptyMap());
+    }
+
+    @GetMapping("/book/list_history")
+    public BaseResponse<PageResponse<BookHistoryResponse>> listSearch(
+            Pageable pageable
+    ) {
+        return BaseResponse.of(bookService.list(pageable));
+    }
+
+    @GetMapping("/public/book/list_banner")
+    public BaseResponse<PageResponse<BookResponse>> listBanner(
+            Pageable pageable
+    ) {
+        return BaseResponse.of(bookService.listBookBanner(pageable));
+    }
+
+    @GetMapping("/public/book/list_new")
+    public BaseResponse<PageResponse<BookResponse>> listNew(
+            Pageable pageable
+    ) {
+        return BaseResponse.of(bookService.listNew(pageable));
     }
 
 }

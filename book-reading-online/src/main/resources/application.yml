@@ -31,14 +31,14 @@ logging:
     org.hibernate.type.descriptor.sql: ${LOG_LEVEL_HIBERNATE_SQL_VALUE:DEBUG}
 
 jwt-config:
-  secretKey: ${JWT_SECRET_KEY:}
+  secretKey: ${JWT_SECRET_KEY:9487322c2f3bb8434f1f213820ed1ebc2f633319ca5391199929cdd202303909ec1cbc3b3c31fc0923aeacd081444fcc682a8a073b9dea6f052c5daddff4c6979b38613adfc5016f55ef2d1005b150c7309d8cc8de15da95142046c48fda6f195624b8e218d1b26a1a3fcbb6ff7a13f6bf902cbf06a5fb30a6f9d7c766aeb93098c12cf800074710bda1fcb987938e2b5ec36aaec0421b00221ae8d94b6a58fe2716d2176212ddfb01a1bef3e5fc01ea24b728ee55acfc94e91dd05bdb69a420e17e2116a9d9ffbf92d749dac9df0d9b0a7313f7152f02be08e55028368376a79f57c8d2796951f1ff8fe800b9bf113871820fc0e427129f7ab8c7df2b81992f}
   expiryDuration: ${JWT_EXPIRY_DURATION:30d}
   refreshDuration: ${JWT_REFRESH_DURATION:60d}
 
 aws-config:
   s3:
-    access-key: ${AWS_S3_ACCESS_KEY:}
-    secret-key: ${AWS_S3_SECRET_KEY:+N}
-    region: ${AWS_S3_REGION:}
-    bucket: ${AWS_S3_BUCKET:}
+    access-key: ${AWS_S3_ACCESS_KEY:AKIAXEFUNF5DI4PYSTRG}
+    secret-key: ${AWS_S3_SECRET_KEY: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}
+    region: ${AWS_S3_REGION:ap-southeast-2}
+    bucket: ${AWS_S3_BUCKET:book-reading-online}
     signature-duration: ${AWS_S3_SIGNATURE_DURATION:30m}

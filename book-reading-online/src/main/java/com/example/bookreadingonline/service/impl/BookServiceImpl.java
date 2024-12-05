@@ -1,38 +1,37 @@
 package com.example.bookreadingonline.service.impl;
 
 import com.example.bookreadingonline.constant.ErrorCode;
-import com.example.bookreadingonline.entity.Author;
-import com.example.bookreadingonline.entity.Book;
-import com.example.bookreadingonline.entity.Category;
-import com.example.bookreadingonline.entity.CategoryBook;
+import com.example.bookreadingonline.entity.*;
 import com.example.bookreadingonline.exception.NotFoundException;
 import com.example.bookreadingonline.payload.filter.BookFilter;
 import com.example.bookreadingonline.payload.filter.BaseEntityFilter;
 import com.example.bookreadingonline.payload.filter.CategoryBookFilter;
+import com.example.bookreadingonline.payload.filter.CommentFilter;
 import com.example.bookreadingonline.payload.request.BookRequest;
 import com.example.bookreadingonline.payload.request.CategoryBookRequest;
-import com.example.bookreadingonline.payload.response.AuthorResponse;
-import com.example.bookreadingonline.payload.response.BookResponse;
+import com.example.bookreadingonline.payload.response.*;
 import com.example.bookreadingonline.payload.response.base.PageResponse;
-import com.example.bookreadingonline.repository.AuthorRepository;
-import com.example.bookreadingonline.repository.BookRepository;
-import com.example.bookreadingonline.repository.CategoryBookRepository;
-import com.example.bookreadingonline.repository.CategoryRepository;
+import com.example.bookreadingonline.repository.*;
+import com.example.bookreadingonline.security.core.userdetails.impl.UserDetailsImpl;
 import com.example.bookreadingonline.service.BookService;
 import com.example.bookreadingonline.service.FileService;
 import com.example.bookreadingonline.util.MyStringUtils;
+import com.example.bookreadingonline.util.SecurityUtils;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,6 +42,9 @@ public class BookServiceImpl implements BookService {
     private final CategoryBookRepository categoryBookRepo;
     private final AuthorRepository authorRepo;
     private final CategoryRepository categoryRepo;
+    private final HistoryRepository historyRepo;
+    private final ChapterRepository chapterRepo;
+    private final FeedbackRepository feedbackRepo;
 
     private final FileService fileService;
 
@@ -61,9 +63,11 @@ public class BookServiceImpl implements BookService {
                 .thumbnail(request.getThumbnail())
                 .summary(request.getSummary())
                 .avgRating(0.0)
+                .feedbackCount(0)
                 .view(0)
                 .status("Chưa hoàn thành")
                 .authorId(request.getAuthorId())
+                .banner(request.getBanner())
                 .build();
         bookRepo.save(book);
         request.getCategoryBooks().forEach(categoryBookRequest -> {
@@ -75,10 +79,31 @@ public class BookServiceImpl implements BookService {
         });
         categoryBookRepo.saveAll(categoryBooks);
         book.setCategoryBooks(categoryBooks);
-        return modelMapper.map(book, BookResponse.class);
+        BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+        bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
+        if (book.getBanner() != null) bookResponse.setBannerUrl(fileService.getFileUrl(book.getBanner()));
+        if (book.getAuthorId() != null) {
+            Author author = authorRepo.findById(book.getAuthorId())
+                    .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
+                            .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                            .extraData("id", book.getAuthorId()));
+            bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+        }
+        if (book.getCategoryBooks() != null) {
+            bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                        .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                .extraData("id", categoryBookResponse.getCategoryId()));
+                categoryBookResponse.setCategoryName(category.getName());
+
+            });
+        }
+        return bookResponse;
     }
 
     @Override
+    @Transactional
     public BookResponse updateBook(BookRequest request) {
         Book book = bookRepo.findById(request.getId())
                 .orElseThrow(() -> new NotFoundException("Not found Book with id: " + request.getId())
@@ -101,7 +126,27 @@ public class BookServiceImpl implements BookService {
             categoryBookRepo.saveAll(categoryBooks);
             book.setCategoryBooks(categoryBooks);
         }
-        return modelMapper.map(book, BookResponse.class);
+        BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+        bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
+        if (book.getBanner() != null) bookResponse.setBannerUrl(fileService.getFileUrl(book.getBanner()));
+        if (book.getAuthorId() != null) {
+            Author author = authorRepo.findById(book.getAuthorId())
+                    .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
+                            .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                            .extraData("id", book.getAuthorId()));
+            bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+        }
+        if (book.getCategoryBooks() != null) {
+            bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                        .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                .extraData("id", categoryBookResponse.getCategoryId()));
+                categoryBookResponse.setCategoryName(category.getName());
+
+            });
+        }
+        return bookResponse;
     }
 
     @Override
@@ -113,18 +158,24 @@ public class BookServiceImpl implements BookService {
                         .extraData("id", id));
         BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
         bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
-        Author author = authorRepo.findById(book.getAuthorId())
-                .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
-                        .errorCode(ErrorCode.ENTITY_NOT_FOUND)
-                        .extraData("id", book.getAuthorId()));
-        bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
-        bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
-            Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
-                    .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+        if (book.getBanner() != null) bookResponse.setBannerUrl(fileService.getFileUrl(book.getBanner()));
+        if (book.getAuthorId() != null) {
+            Author author = authorRepo.findById(book.getAuthorId())
+                    .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
                             .errorCode(ErrorCode.ENTITY_NOT_FOUND)
-                            .extraData("id", categoryBookResponse.getCategoryId()));
-            categoryBookResponse.setCategoryName(category.getName());
-        });
+                            .extraData("id", book.getAuthorId()));
+            bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+        }
+        if (book.getCategoryBooks() != null) {
+            bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                        .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                .extraData("id", categoryBookResponse.getCategoryId()));
+                categoryBookResponse.setCategoryName(category.getName());
+
+            });
+        }
         return bookResponse;
     }
 
@@ -135,6 +186,11 @@ public class BookServiceImpl implements BookService {
                         .errorCode(ErrorCode.ENTITY_NOT_FOUND)
                         .extraData("id", id));
         bookRepo.delete(book);
+        List<Chapter> chapters = chapterRepo.findByBookId(id);
+        if (chapters != null) chapterRepo.deleteAll(chapters);
+        List<Feedback> feedbacks = feedbackRepo.findByBookId(id);
+        if (feedbacks != null) feedbackRepo.deleteAll(feedbacks);
+
     }
 
     @Override
@@ -142,7 +198,7 @@ public class BookServiceImpl implements BookService {
     public PageResponse<BookResponse> listSearch(String title, String status, Integer authorId, Integer categoryId, Pageable pageable) {
         BaseEntityFilter<BookFilter> filter = BaseEntityFilter.of(Lists.newArrayList(),
                 pageable);
-        if (StringUtils.isNotBlank(title) || status != null || authorId != null) {
+        if (StringUtils.isNotBlank(title) || status != null || authorId != null || categoryId != null) {
             BookFilter bookFilter = new BookFilter();
             if (StringUtils.isNotBlank(title)) {
                 bookFilter.setTitleLk(MyStringUtils.buildSqlLikePattern(title));
@@ -155,30 +211,182 @@ public class BookServiceImpl implements BookService {
             }
             if (categoryId != null) {
                 List<CategoryBook> categoryBooks = categoryBookRepo.findByCategoryId(categoryId);
-                categoryBooks.forEach(categoryBook -> {
-                    bookFilter.setCategoryBooks(CategoryBookFilter.builder()
-                            .categoryId(categoryBook.getCategoryId()).build());
-                });
+                if (categoryBooks != null && !categoryBooks.isEmpty()) {
+                    categoryBooks.forEach(categoryBook -> {
+                        bookFilter.setCategoryBooks(CategoryBookFilter.builder()
+                                .categoryId(categoryBook.getCategoryId()).build());
+                    });
+                }
+                else bookFilter.setCategoryBooks(CategoryBookFilter.builder()
+                        .categoryId(0).build());
             }
             filter.getFilters().add(bookFilter);
         }
+
         return PageResponse
                 .toResponse(filter(filter),
                         book -> {
                             BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
                             bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
-                            Author author = authorRepo.findById(book.getAuthorId())
-                                    .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
-                                            .errorCode(ErrorCode.ENTITY_NOT_FOUND)
-                                            .extraData("id", book.getAuthorId()));
-                            bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
-                            bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
-                                Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
-                                        .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                            if (book.getBanner() != null) bookResponse.setBannerUrl(fileService.getFileUrl(book.getBanner()));
+                            if (book.getAuthorId() != null) {
+                                Author author = authorRepo.findById(book.getAuthorId())
+                                        .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
                                                 .errorCode(ErrorCode.ENTITY_NOT_FOUND)
-                                                .extraData("id", categoryBookResponse.getCategoryId()));
-                                categoryBookResponse.setCategoryName(category.getName());
-                            });
+                                                .extraData("id", book.getAuthorId()));
+                                bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+                            }
+                            if (book.getCategoryBooks() != null) {
+                                bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                                    Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                                            .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                                    .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                                    .extraData("id", categoryBookResponse.getCategoryId()));
+                                    categoryBookResponse.setCategoryName(category.getName());
+
+                                });
+                            }
+                            Chapter chapter = chapterRepo.findChapterWithHighestOrder(book.getId());
+                            if (chapter != null){
+                                bookResponse.setNewChapter(modelMapper.map(chapter, NewChapterResponse.class));
+
+                            }
+                            return bookResponse;
+                        });
+    }
+
+    @Override
+    @Transactional
+    public PageResponse<BookHistoryResponse> list(Pageable pageable) {
+        User user = SecurityUtils.getUserDetails(UserDetailsImpl.class).getUser();
+        List<History> distinctHistories = historyRepo.findByUserId(user.getId()).stream()
+                .collect(Collectors.groupingBy(History::getBookId,
+                        Collectors.maxBy(Comparator.comparingInt(History::getId))))
+                .values()
+                .stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .sorted(Comparator.comparingInt(History::getId).reversed())
+                .toList();
+        BaseEntityFilter<BookFilter> filter = BaseEntityFilter.of(Lists.newArrayList(),
+                pageable);
+        distinctHistories.forEach(distinctHistory -> {
+            log.info("abc:" + distinctHistory.getId());
+            filter.getFilters().add(BookFilter.builder()
+                    .id(distinctHistory.getBookId())
+                    .build());
+        });
+        List<BookHistoryResponse> responses = filter(filter).stream()
+                .map(book -> {
+                    BookHistoryResponse bookResponse = modelMapper.map(book, BookHistoryResponse.class);
+                    bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
+
+                    distinctHistories.stream()
+                            .filter(distinctHistory -> distinctHistory.getBookId().equals(book.getId()))
+                            .findFirst()
+                            .ifPresent(distinctHistory -> bookResponse.setChapterId(distinctHistory.getChapterId()));
+                    Chapter chapter = chapterRepo.findById(bookResponse.getChapterId()).orElseThrow(() -> new NotFoundException("Not found Author with id: " + bookResponse.getChapterId())
+                            .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                            .extraData("id", bookResponse.getChapterId()));
+                    bookResponse.setChapter(modelMapper.map(chapter, ChapterHistoryResponse.class));
+                    if (book.getAuthorId() != null) {
+                        Author author = authorRepo.findById(book.getAuthorId())
+                                .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
+                                        .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                        .extraData("id", book.getAuthorId()));
+                        bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+                    }
+
+                    if (book.getCategoryBooks() != null) {
+                        bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                            Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                                    .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                            .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                            .extraData("id", categoryBookResponse.getCategoryId()));
+                            categoryBookResponse.setCategoryName(category.getName());
+                        });
+                    }
+
+                    return bookResponse;
+                })
+                .toList();
+
+        List<BookHistoryResponse> sortedResponses = distinctHistories.stream()
+                .flatMap(distinctHistory -> responses.stream()
+                        .filter(response -> response.getId().equals(distinctHistory.getBookId())))
+                .toList();
+
+        int start = Math.toIntExact(pageable.getOffset());
+        int end = Math.min((start + pageable.getPageSize()), sortedResponses.size());
+        List<BookHistoryResponse> paginatedResponses = sortedResponses.subList(start, end);
+
+        return PageResponse.toResponse(new PageImpl<>(paginatedResponses, pageable, sortedResponses.size()));
+    }
+
+    @Override
+    @Transactional
+    public PageResponse<BookResponse> listBookBanner(Pageable pageable) {
+        Page<Book> booksWithBanner = bookRepo.findByBannerIsNotNull(pageable);
+
+        return PageResponse
+                .toResponse(booksWithBanner,
+                        book -> {
+                            BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+                            bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
+                            bookResponse.setBannerUrl(fileService.getFileUrl(book.getBanner()));
+                            if (book.getAuthorId() != null) {
+                                Author author = authorRepo.findById(book.getAuthorId())
+                                        .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
+                                                .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                                .extraData("id", book.getAuthorId()));
+                                bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+                            }
+                            if (book.getCategoryBooks() != null) {
+                                bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                                    Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                                            .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                                    .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                                    .extraData("id", categoryBookResponse.getCategoryId()));
+                                    categoryBookResponse.setCategoryName(category.getName());
+
+                                });
+                            }
+                            return bookResponse;
+                        });
+    }
+
+    @Override
+    @Transactional
+    public PageResponse<BookResponse> listNew(Pageable pageable) {
+        Page<Book> booksPage = bookRepo.findAllBooksSortedByChapterOrder(pageable);
+
+        return PageResponse
+                .toResponse(booksPage,
+                        book -> {
+                            BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+                            bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
+                            if (book.getAuthorId() != null) {
+                                Author author = authorRepo.findById(book.getAuthorId())
+                                        .orElseThrow(() -> new NotFoundException("Not found Author with id: " + book.getAuthorId())
+                                                .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                                .extraData("id", book.getAuthorId()));
+                                bookResponse.setAuthor(modelMapper.map(author, AuthorResponse.class));
+                            }
+                            if (book.getCategoryBooks() != null) {
+                                bookResponse.getCategoryBooks().forEach(categoryBookResponse -> {
+                                    Category category = categoryRepo.findById(categoryBookResponse.getCategoryId())
+                                            .orElseThrow(() -> new NotFoundException("Not found Book with id: " + categoryBookResponse.getCategoryId())
+                                                    .errorCode(ErrorCode.ENTITY_NOT_FOUND)
+                                                    .extraData("id", categoryBookResponse.getCategoryId()));
+                                    categoryBookResponse.setCategoryName(category.getName());
+
+                                });
+                            }
+                            Chapter chapter = chapterRepo.findChapterWithHighestOrder(book.getId());
+                            if (chapter != null){
+                                bookResponse.setNewChapter(modelMapper.map(chapter, NewChapterResponse.class));
+
+                            }
                             return bookResponse;
                         });
     }

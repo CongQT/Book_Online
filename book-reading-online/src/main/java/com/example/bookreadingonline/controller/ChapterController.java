@@ -56,7 +56,7 @@ public class ChapterController {
         return BaseResponse.of(chapterService.updateChapter(bookId, request));
     }
 
-    @GetMapping("/chapter/delete/{chapterId}")
+    @DeleteMapping("/chapter/delete/{chapterId}")
     public BaseResponse<Object> deleteBook(
             @PathVariable("chapterId") Integer chapterId) {
         chapterService.deleteChapter(chapterId);

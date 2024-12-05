@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
-@Table(name = "author")
+@Table(name = "react")
 @Entity
 @Getter
 @Setter
@@ -14,7 +14,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 @NoArgsConstructor
 @AllArgsConstructor
 @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-public class Author extends BaseEntity {
+public class Like extends BaseEntity {
 
   @Id
   @EqualsAndHashCode.Include
@@ -22,13 +22,13 @@ public class Author extends BaseEntity {
   @Column(name = "id", updatable = false)
   private Integer id;
 
-  @Column(name = "name")
-  private String name;
+  @Column(name = "react")
+  private String react;
 
-  @Column(name = "image_avt")
-  private String image;
+  @Column(name = "comment_id")
+  private Integer commentId;
 
-  @Column(name = "description")
-  private String description;
+  @Column(name = "user_id")
+  private Integer userId;
 
 }

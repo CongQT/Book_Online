@@ -28,6 +28,9 @@ public class BookRequest {
     @JsonProperty("thumbnail")
     private String thumbnail;
 
+    @JsonProperty("banner")
+    private String banner;
+
     @JsonProperty("author_id")
     private Integer authorId;
 

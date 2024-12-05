@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BookReadingOnlineApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BookReadingOnlineApplication.class, args);
+        SpringApplication.run(BookReadingOnlineApplication.class, args); 
     }
-
+    
 }

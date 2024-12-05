@@ -22,4 +22,10 @@ public class AuthorRequest {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("image")
+    private String image;
+
+    @JsonProperty("description")
+    private String description;
+
 }

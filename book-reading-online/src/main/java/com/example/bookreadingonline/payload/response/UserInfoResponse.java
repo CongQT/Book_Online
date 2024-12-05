@@ -40,6 +40,9 @@ public class UserInfoResponse {
   @JsonProperty("phone")
   private String phone;
 
+  @JsonProperty("avatar_key")
+  private String avatar;
+
   @JsonProperty("avatar_url")
   private String avatar_url;
 

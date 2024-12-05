@@ -2,7 +2,6 @@ package com.example.bookreadingonline.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,30 +12,33 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ChapterResponse {
+public class CommentReplyResponse {
 
     @JsonProperty("id")
     private Integer id;
 
-    @JsonProperty("order_next")
-    private Integer orderNext;
-
-    @JsonProperty("order_previous")
-    private Integer orderPrevious;
+    @JsonProperty("comment")
+    private String comment;
 
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("order_chap")
-    private Integer orderChap;
+    @JsonProperty("like_count")
+    private Integer likeCount;
 
-    @JsonProperty("book")
-    private BookResponse book;
+    @JsonProperty("parent_id")
+    private Integer parent;
 
-    @JsonProperty("file_key")
-    private String fileKey;
+    @JsonProperty("reply_name")
+    private String replyName;
 
-    @JsonProperty("file_url")
-    private String fileUrl;
+    @JsonProperty("last_updated")
+    private String lastUpdated;
+
+    @JsonProperty("check_like")
+    private Boolean checkLike;
+
+    @JsonProperty("user")
+    private UserInfoResponse user;
 
 }

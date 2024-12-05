@@ -10,7 +10,9 @@ import com.example.bookreadingonline.payload.request.AuthorRequest;
 import com.example.bookreadingonline.payload.response.AuthorResponse;
 import com.example.bookreadingonline.payload.response.base.PageResponse;
 import com.example.bookreadingonline.repository.AuthorRepository;
+import com.example.bookreadingonline.repository.BookRepository;
 import com.example.bookreadingonline.service.AuthorService;
+import com.example.bookreadingonline.service.FileService;
 import com.example.bookreadingonline.util.MyStringUtils;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +23,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
 
     private final AuthorRepository authorRepo;
+    private final BookRepository bookRepo;
+
+    private final FileService fileService;
 
     private final ModelMapper modelMapper;
 
@@ -39,9 +46,13 @@ public class AuthorServiceImpl implements AuthorService {
     public AuthorResponse createAuthor(AuthorRequest request) {
         Author author = Author.builder()
                 .name(request.getName())
+                .description(request.getDescription())
+                .image(request.getImage())
                 .build();
         authorRepo.save(author);
-        return modelMapper.map(author, AuthorResponse.class);
+        AuthorResponse authorResponse = modelMapper.map(author, AuthorResponse.class);
+        if (author.getImage() != null) authorResponse.setImageUrl(fileService.getFileUrl(authorResponse.getImage()));
+        return authorResponse;
     }
 
     @Override
@@ -52,7 +63,9 @@ public class AuthorServiceImpl implements AuthorService {
                         .extraData("id", request.getId()));
         modelMapper.map(request, author);
         authorRepo.save(author);
-        return modelMapper.map(author, AuthorResponse.class);
+        AuthorResponse authorResponse = modelMapper.map(author, AuthorResponse.class);
+        if (author.getImage() != null) authorResponse.setImageUrl(fileService.getFileUrl(authorResponse.getImage()));
+        return authorResponse;
     }
 
     @Override
@@ -61,16 +74,27 @@ public class AuthorServiceImpl implements AuthorService {
                 .orElseThrow(() -> new NotFoundException("Not found Author with id: " + id)
                         .errorCode(ErrorCode.ENTITY_NOT_FOUND)
                         .extraData("id", id));
-        return modelMapper.map(author, AuthorResponse.class);
+
+        AuthorResponse authorResponse = modelMapper.map(author, AuthorResponse.class);
+        if (author.getImage() != null) authorResponse.setImageUrl(fileService.getFileUrl(authorResponse.getImage()));
+        return authorResponse;
     }
 
     @Override
     public void deleteAuthor(Integer id) {
+        List<Book> books = bookRepo.findByAuthorId(id);
+        if(books != null){
+            books.forEach(book -> {
+                book.setAuthorId(1);
+            });
+            bookRepo.saveAll(books);
+        }
         Author author = authorRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found Author with id: " + id)
                         .errorCode(ErrorCode.ENTITY_NOT_FOUND)
                         .extraData("id", id));
         authorRepo.delete(author);
+        
     }
 
     @Override
@@ -82,7 +106,12 @@ public class AuthorServiceImpl implements AuthorService {
                     .build());
         }
         return PageResponse
-                .toResponse(filter(filter), author -> modelMapper.map(author, AuthorResponse.class));
+                .toResponse(filter(filter), author -> {
+                    AuthorResponse authorResponse = modelMapper.map(author, AuthorResponse.class);
+                    if (author.getImage() != null)
+                        authorResponse.setImageUrl(fileService.getFileUrl(authorResponse.getImage()));
+                    return authorResponse;
+                });
     }
 
 

@@ -40,6 +40,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
       @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain
   ) throws ServletException, IOException {
+
     String jwt = parseJwt(request);
     if (StringUtils.isNotBlank(jwt)) {
       String username = JwtUtils.getSubjectFromJwtToken(jwt, jwtSecret);
@@ -70,7 +71,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-    return requestMatcher.matches(request);
+    return false;
   }
 
   private String parseJwt(HttpServletRequest request) {

@@ -30,7 +30,7 @@ public class AuthorController {
         return BaseResponse.of(authorService.listSearch(name, pageable));
     }
 
-    @GetMapping("/author/info/{authorId}")
+    @GetMapping("/public/author/info/{authorId}")
     public BaseResponse<AuthorResponse> getAuthorInfo(
             @PathVariable("authorId") Integer authorId)
     {
@@ -51,7 +51,7 @@ public class AuthorController {
         return BaseResponse.of(authorService.updateAuthor(request));
     }
 
-    @GetMapping("/author/delete/{authorId}")
+    @DeleteMapping("/author/delete/{authorId}")
     public BaseResponse<Object> deleteAuthor(
             @PathVariable("authorId") Integer authorId) {
         authorService.deleteAuthor(authorId);

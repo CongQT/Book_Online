@@ -3,39 +3,32 @@ package com.example.bookreadingonline.payload.response;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.time.LocalDateTime;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AuthorResponse {
+public class FeedbackResponse {
 
     @JsonProperty("id")
     private Integer id;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("content")
+    private String content;
 
-    @JsonProperty("image")
-    private String imageUrl;
+    @JsonProperty("rating")
+    private Integer rating;
 
-    @JsonProperty("image_key")
-    private String image;
+    @JsonProperty("last_updated")
+    private String lastUpdated;
 
-    @JsonProperty("description")
-    private String description;
-
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
-
-    @JsonProperty("updated_at")
-    private LocalDateTime updatedAt;
+    @JsonProperty("user")
+    private UserInfoResponse user;
 
 }

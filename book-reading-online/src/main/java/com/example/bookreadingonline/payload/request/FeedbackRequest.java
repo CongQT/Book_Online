@@ -2,10 +2,8 @@ package com.example.bookreadingonline.payload.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,19 +14,17 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RegistrationRequest {
+public class FeedbackRequest {
 
+    @JsonProperty("id")
+    private Integer id;
 
-  @NotBlank(message = "MISSING_EMAIL")
-  @JsonProperty("email")
-  private String email;
+    @NotBlank
+    @JsonProperty("content")
+    private String content;
 
-  @NotBlank(message = "MISSING_USERNAME")
-  @JsonProperty("username")
-  private String username;
-
-  @NotBlank(message = "MISSING_PASSWORD")
-  @JsonProperty("password")
-  private String password;
+    @NotNull
+    @JsonProperty("rating")
+    private Integer rating;
 
 }
