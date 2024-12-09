@@ -60,13 +60,6 @@ public class BookController {
         return BaseResponse.of(Collections.emptyMap());
     }
 
-    @GetMapping("/book/list_history")
-    public BaseResponse<PageResponse<BookHistoryResponse>> listSearch(
-            Pageable pageable
-    ) {
-        return BaseResponse.of(bookService.list(pageable));
-    }
-
     @GetMapping("/public/book/list_banner")
     public BaseResponse<PageResponse<BookResponse>> listBanner(
             Pageable pageable
