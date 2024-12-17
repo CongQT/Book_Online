@@ -74,3 +74,12 @@ ALTER TABLE book_aud
     CHANGE COLUMN thumbnail thumbnail TEXT,
     CHANGE COLUMN banner banner TEXT;
 
+-- changeset congqt:20241121.133400.06
+
+CREATE TABLE predictions
+(
+    user_id          INT,
+    book_id          INT,
+    predicted_rating FLOAT
+);
+
