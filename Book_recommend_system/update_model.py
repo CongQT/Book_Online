@@ -1,12 +1,7 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+
 from sqlalchemy import create_engine, MetaData, text
 import numpy as np
-from sklearn.metrics import mean_squared_error
-import json
 import logging
-import requests
-from fastapi.middleware.cors import CORSMiddleware
 import mysql.connector
 import pandas as pd
 

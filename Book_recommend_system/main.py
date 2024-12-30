@@ -1,13 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import create_engine, MetaData, text
-import numpy as np
-from sklearn.metrics import mean_squared_error
 import uvicorn
 import logging
 import requests
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
 from update_model import update_model_task
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -107,13 +104,12 @@ def get_book_info(book_id):
 # Scheduler function
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(update_model_task, 'interval', minutes=10)  # Đặt lịch chạy mỗi 10 phút
+    scheduler.add_job(update_model_task, 'interval', days = 1)  
     scheduler.start()
 
 @app.on_event("startup")
 def startup_event():
     start_scheduler()
 
-# Khởi động FastAPI và Scheduler trong vòng lặp sự kiện
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=5500)
