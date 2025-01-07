@@ -17,22 +17,6 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 
 public class MyReflectionUtils {
 
-  public static <T> Constructor<? super T> getConstructor(Class<T> clazz,
-      Class<?>... parameterTypes) {
-    try {
-      Constructor<T> constructor = clazz.getDeclaredConstructor(parameterTypes);
-      constructor.setAccessible(true);
-      return constructor;
-    } catch (NoSuchMethodException e) {
-      Class<? super T> parent = clazz.getSuperclass();
-      if (parent != null) {
-        return getConstructor(parent, parameterTypes);
-      } else {
-        return null;
-      }
-    }
-  }
-
   public static List<Field> getAllFields(Class<?> clazz) {
     List<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
     fields.forEach(field -> field.setAccessible(true));

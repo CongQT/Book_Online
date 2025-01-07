@@ -60,18 +60,4 @@ public class PageResponse<T> {
     return toResponse(page.map(function));
   }
 
-  public static <R, T> PageResponse<T> toResponse(PageResponse<R> source, Function<R, T> function) {
-    List<T> content = MyListUtils.map(source.getContent(), function);
-    return PageResponse.<T>builder()
-        .content(content)
-        .number(source.getNumber())
-        .size(source.getSize())
-        .numberOfElements(source.getNumberOfElements())
-        .first(source.isFirst())
-        .last(source.isLast())
-        .totalPages(source.getTotalPages())
-        .totalElements(source.getTotalElements())
-        .build();
-  }
-
 }

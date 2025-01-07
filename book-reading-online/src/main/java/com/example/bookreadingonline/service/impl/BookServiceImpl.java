@@ -2,6 +2,7 @@ package com.example.bookreadingonline.service.impl;
 
 import com.example.bookreadingonline.constant.ErrorCode;
 import com.example.bookreadingonline.entity.*;
+import com.example.bookreadingonline.exception.BadRequestException;
 import com.example.bookreadingonline.exception.NotFoundException;
 import com.example.bookreadingonline.payload.filter.BookFilter;
 import com.example.bookreadingonline.payload.filter.BaseEntityFilter;
@@ -256,7 +257,8 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public PageResponse<BookHistoryResponse> list(Pageable pageable) {
         User user = SecurityUtils.getUserDetails(UserDetailsImpl.class).getUser();
-        List<History> distinctHistories = historyRepo.findByUserId(user.getId()).stream()
+        List<History> distinctHistories = historyRepo.findByUserId(user.getId())
+                .stream()
                 .collect(Collectors.groupingBy(History::getBookId,
                         Collectors.maxBy(Comparator.comparingInt(History::getId))))
                 .values()
@@ -265,6 +267,11 @@ public class BookServiceImpl implements BookService {
                 .map(Optional::get)
                 .sorted(Comparator.comparingInt(History::getId).reversed())
                 .toList();
+        if (distinctHistories.isEmpty()) {
+            throw new BadRequestException(
+                    "history is null").errorCode(ErrorCode.ENTITY_NOT_FOUND);
+        }
+
         BaseEntityFilter<BookFilter> filter = BaseEntityFilter.of(Lists.newArrayList(), pageable);
         distinctHistories.forEach(distinctHistory -> {
             filter.getFilters().add(BookFilter.builder()
