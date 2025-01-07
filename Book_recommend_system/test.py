@@ -155,66 +155,31 @@ class MF(object):
         return p, r
 
 # Đọc dữ liệu ratings
-ratings = pd.read_csv('Ratings.csv', delimiter=",", encoding="latin1")
-ratings.columns = ['User-ID', 'ISBN', 'Book-Rating']
+r_cols = ['user_id', 'book_id', 'rating', 'unix_timestamp']
 
-# Loại bỏ các dòng có giá trị thiếu và các dòng có Book-Rating không hợp lệ
-ratings = ratings.dropna(subset=['User-ID', 'ISBN', 'Book-Rating'])
-ratings = ratings[ratings['Book-Rating'].between(0, 5)]
+ratings = pd.read_csv('ratings.base', sep='\t', names=r_cols, encoding='latin-1')
+user_ratings_count = ratings['user_id'].value_counts()
+users_above_50 = user_ratings_count[user_ratings_count > 30].index
 
-min_ratings_user = 15  # Người dùng phải có ít nhất 5 đánh giá
-min_ratings_item = 15  # Sách phải có ít nhất 5 đánh giá
+# Lọc df_users chỉ bao gồm những người dùng có hơn 50 đánh giá
+df_users_filtered = ratings[ratings['user_id'].isin(users_above_50)]
+print(len(users_above_50))
+df_users = df_users_filtered[df_users_filtered['user_id'].isin(ratings['user_id'].unique()[:600])]
 
-user_counts = ratings['User-ID'].value_counts()
-isbn_counts = ratings['ISBN'].value_counts()
-
-ratings = ratings[ratings['User-ID'].isin(user_counts[user_counts >= min_ratings_user].index)]
-ratings = ratings[ratings['ISBN'].isin(isbn_counts[isbn_counts >= min_ratings_item].index)]
-
-# Mã hóa User-ID và ISBN thành các chỉ số số học
-user_id_mapping = {user: idx for idx, user in enumerate(ratings['User-ID'].unique())}
-isbn_mapping = {isbn: idx for idx, isbn in enumerate(ratings['ISBN'].unique())}
-
-# Thêm các cột mới cho ID của người dùng và sách
-ratings['User-ID'] = ratings['User-ID'].map(user_id_mapping)
-ratings['ISBN'] = ratings['ISBN'].map(isbn_mapping)
-
-# Kiểm tra lại dữ liệu sau khi mã hóa
-print(ratings.head())
+df_sample = df_users.sample(n=50000, random_state=42, replace=True)
 
 # Chia dữ liệu thành Training set (70%) và Test set (30%)
-rate_train_find, rate_train_test= train_test_split(ratings, test_size=0.8, random_state=42)
-train_data, test_data = train_test_split(rate_train_find, test_size=0.3, random_state=42)
-
-# Kiểm tra kích thước dữ liệu
-print(f"Training data size: {train_data.shape}")
-print(f"Test data size: {test_data.shape}")
-
-# Sử dụng ma trận thưa (sparse) để lưu trữ ma trận huấn luyện
-train_matrix = lil_matrix((len(user_id_mapping), len(isbn_mapping)))
-
-for row in train_data.itertuples():
-    train_matrix[row[1], row[2]] = row[3]  # User-ID, ISBN, Book-Rating
-
-# Sử dụng ma trận thưa (sparse) để lưu trữ ma trận kiểm tra
-test_matrix = lil_matrix((len(user_id_mapping), len(isbn_mapping)))
-
-for row in test_data.itertuples():
-    test_matrix[row[1], row[2]] = row[3]  # User-ID, ISBN, Book-Rating
-
-# Kiểm tra ma trận huấn luyện (với ma trận thưa)
-print(f"Training matrix shape: {train_matrix.shape}")
-print(f"Test matrix shape: {test_matrix.shape}")
+train_data, test_data = train_test_split(df_sample, test_size=0.3, random_state=42)
 
 # Chuyển đổi dữ liệu thành dạng mảng NumPy cho Y (ma trận đánh giá)
-Y_train = train_data[['User-ID', 'ISBN', 'Book-Rating']].values
+Y_train = train_data[['user_id', 'book_id', 'rating']].values
 
 # Khởi tạo mô hình MF
-mf_model = MF(Y_train, n_factors=20, n_epochs=25, lr=0.02, lamda=0.1)
+mf_model = MF(Y_train, n_factors=50, n_epochs=30, lr=2, lamda=0.02)
 
 # Huấn luyện mô hình
-mf_model.fit(x=10, data_size='100K', Data_test=test_data[['User-ID', 'ISBN', 'Book-Rating']].values)
+mf_model.fit(x=10, data_size='100K', Data_test=test_data[['user_id', 'book_id', 'rating']].values)
 
 # Tính toán RMSE trên bộ dữ liệu kiểm tra
-rmse = mf_model.RMSE(test_data[['User-ID', 'ISBN', 'Book-Rating']].values)
+rmse = mf_model.RMSE(test_data[['user_id', 'book_id', 'rating']].values)
 print(f"RMSE on test data: {rmse}")

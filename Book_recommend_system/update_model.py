@@ -120,7 +120,7 @@ class MF(object):
 
         return recommendations
 
-    def RMSE(self, Data_test, test_size=0, data_size='100K', p=10):
+    def RMSE(self, Data_test, test_size=0, data_size='100', p=10):
         n_tests = Data_test.shape[0]
         SE = 0
         for n in range(n_tests):
@@ -167,15 +167,14 @@ con = mysql.connector.connect(
 )
 
 df = pd.read_sql(query, con)
-
 def update_model_task():
     with engine.connect() as conn:
         utility_array = df.to_numpy()
-        
+    
         Y = np.array(utility_array)
-        logging.warning(Y)
-        model = MF(Y=Y, n_factors=10, lr=0.02, n_epochs=50)
-        model.fit(x=5, data_size='100K', Data_test=utility_array)
+        #logging.warning(test_array)
+        model = MF(Y=Y, n_factors=100, lr=0.001, n_epochs=50)
+        model.fit(x=5, data_size='200', Data_test=utility_array)
 
         predictions = model.recommend()
         logging.warning(predictions)
@@ -202,3 +201,4 @@ def update_model_task():
         except Exception as e:
             logging.error(f"Failed to update predictions: {e}")
 
+update_model_task()

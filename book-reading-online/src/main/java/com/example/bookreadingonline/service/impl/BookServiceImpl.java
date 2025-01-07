@@ -27,10 +27,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -268,16 +265,13 @@ public class BookServiceImpl implements BookService {
                 .map(Optional::get)
                 .sorted(Comparator.comparingInt(History::getId).reversed())
                 .toList();
-        BaseEntityFilter<BookFilter> filter = BaseEntityFilter.of(Lists.newArrayList(),
-                pageable);
+        BaseEntityFilter<BookFilter> filter = BaseEntityFilter.of(Lists.newArrayList(), pageable);
         distinctHistories.forEach(distinctHistory -> {
-            log.info("abc:" + distinctHistory.getId());
             filter.getFilters().add(BookFilter.builder()
                     .id(distinctHistory.getBookId())
                     .build());
         });
-        List<BookHistoryResponse> responses = filter(filter).stream()
-                .map(book -> {
+        PageResponse<BookHistoryResponse> pageResponse = PageResponse.toResponse(filter(filter), book -> {
                     BookHistoryResponse bookResponse = modelMapper.map(book, BookHistoryResponse.class);
                     bookResponse.setThumbnailUrl(fileService.getFileUrl(book.getThumbnail()));
 
@@ -308,19 +302,22 @@ public class BookServiceImpl implements BookService {
                     }
 
                     return bookResponse;
-                })
-                .toList();
-
+                });
         List<BookHistoryResponse> sortedResponses = distinctHistories.stream()
-                .flatMap(distinctHistory -> responses.stream()
+                .flatMap(distinctHistory -> pageResponse.getContent().stream()
                         .filter(response -> response.getId().equals(distinctHistory.getBookId())))
-                .toList();
+                .collect(Collectors.toList());
 
-        int start = Math.toIntExact(pageable.getOffset());
-        int end = Math.min((start + pageable.getPageSize()), sortedResponses.size());
-        List<BookHistoryResponse> paginatedResponses = sortedResponses.subList(start, end);
-
-        return PageResponse.toResponse(new PageImpl<>(paginatedResponses, pageable, sortedResponses.size()));
+        return PageResponse.<BookHistoryResponse>builder()
+                .content(sortedResponses)
+                .number(pageResponse.getNumber())
+                .size(pageResponse.getSize())
+                .numberOfElements(pageResponse.getNumberOfElements())
+                .first(pageResponse.isFirst())
+                .last(pageResponse.isLast())
+                .totalPages(pageResponse.getTotalPages())
+                .totalElements(pageResponse.getTotalElements())
+                .build();
     }
 
     @Override
