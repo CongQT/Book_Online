@@ -34,7 +34,7 @@ public class BookResponse {
 
   @JsonGetter("avg_rating")
   public Double getAvgRating() {
-    return Math.round(avgRating * 100.0) / 100.0;
+    return Math.round(avgRating * 10.0) / 10.0;
   }
 
   @JsonProperty("thumbnail_key")

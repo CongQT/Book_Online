@@ -34,6 +34,8 @@ class MF(object):
         self.bi = np.random.randn(self.items_count)
         self.bu = np.random.randn(self.users_count)
         self.n_ratings = self.Y.shape[0]
+        
+        self.global_avg_rating = np.mean(self.Y[self.Y[:, 2] > 0, 2])
 
     def get_user_rated_item(self, i):
         ids = np.where(i == self.Ybar[:, 1])[0].astype(int)
@@ -114,7 +116,8 @@ class MF(object):
             # Tính điểm cho từng vật phẩm chưa đánh giá
             for i in range(self.items_count):
                 if i not in items_rated_by_user:
-                    a[i] = pred[i] + self.bi[i] + self.bu[u]
+                    pre = pred[i] + self.bi[i] + self.bu[u] + self.global_avg_rating
+                    a[i] = max(0, min(5, pre))
             # Lưu kết quả dự đoán cho người dùng u
             recommendations[u] = a
 
@@ -173,7 +176,7 @@ def update_model_task():
     
         Y = np.array(utility_array)
         #logging.warning(test_array)
-        model = MF(Y=Y, n_factors=100, lr=0.001, n_epochs=50)
+        model = MF(Y=Y, n_factors=100, lr=0.001, n_epochs=180)
         model.fit(x=5, data_size='200', Data_test=utility_array)
 
         predictions = model.recommend()
